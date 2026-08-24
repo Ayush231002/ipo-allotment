@@ -337,3 +337,83 @@ tbody tr.hit:hover{background:color-mix(in srgb,var(--ok) 13%, transparent)}
   .run-card{position:sticky; bottom:0; z-index:20; margin-left:-16px; margin-right:-16px; border-radius:16px 16px 0 0;
     box-shadow:0 -8px 24px -12px rgba(0,0,0,.35); border-bottom:0}
 }
+
+/* ============================================================
+   Phase 1 — IPO Intelligence pages (dashboard + IPO detail).
+   Additive only; reuses the tokens above.
+   ============================================================ */
+.topnav{display:flex; gap:4px; align-items:center}
+.nav-link{padding:7px 12px; border-radius:9px; font-weight:650; font-size:14px; color:var(--muted); text-decoration:none}
+.nav-link:hover{color:var(--text); background:var(--surface-2)}
+.nav-link.active{color:var(--brand); background:var(--brand-soft)}
+
+.page-head{margin:26px 0 6px}
+.page-head h1{font-size:clamp(24px,4vw,34px); letter-spacing:-.03em; margin:0 0 6px}
+.page-head p{color:var(--muted); margin:0; max-width:60ch}
+
+.ov-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin:18px 0}
+.ov-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:16px 18px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:3px}
+.ov-card .ov-top{display:flex; align-items:center; justify-content:space-between; color:var(--muted)}
+.ov-card .ov-ic{width:34px; height:34px; display:grid; place-items:center; border-radius:9px;
+  background:var(--brand-soft); color:var(--brand)}
+.ov-card .ov-ic svg{width:18px; height:18px}
+.ov-card .ov-n{font-size:30px; font-weight:820; letter-spacing:-.02em; line-height:1.1}
+.ov-card .ov-l{font-size:12px; color:var(--muted); font-weight:650; text-transform:uppercase; letter-spacing:.04em}
+.ov-card .ov-sub{font-size:12px; color:var(--faint)}
+.ov-card.awaiting .ov-n{color:var(--faint); font-size:16px; font-weight:700}
+
+.awaiting-tag{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:650;
+  color:var(--warn); background:var(--warn-bg); padding:3px 10px; border-radius:var(--radius-pill)}
+.updated{font-size:12px; color:var(--faint)}
+.updated .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:5px;vertical-align:middle}
+
+.dq-strip{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:6px 0 2px}
+.dq-pill{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:650;
+  border:1px solid var(--border); border-radius:var(--radius-pill); padding:5px 12px; background:var(--surface)}
+.dq-pill b{font-weight:750}
+.dq-pill.official{color:var(--ok-ink); border-color:color-mix(in srgb,var(--ok) 35%,var(--border))}
+.dq-pill.manual{color:var(--warn)}
+
+.filters{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0}
+.fchip{border:1px solid var(--border); background:var(--surface); color:var(--text-2); font-weight:650;
+  font-size:13px; padding:7px 13px; border-radius:var(--radius-pill); cursor:pointer}
+.fchip:hover{border-color:var(--border-strong)}
+.fchip.active{background:var(--brand); color:var(--brand-ink); border-color:var(--brand)}
+
+.ipo-list{display:flex; flex-direction:column; gap:9px}
+.ipo-row{display:flex; align-items:center; gap:14px; padding:14px 16px; text-decoration:none; color:inherit;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow-sm)}
+.ipo-row:hover{border-color:var(--brand-ring); transform:translateY(-1px); transition:.15s}
+.ipo-row .ir-main{flex:1; min-width:0}
+.ipo-row .ir-name{font-weight:700; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ipo-row .ir-meta{font-size:12.5px; color:var(--muted); margin-top:2px; display:flex; gap:10px; flex-wrap:wrap}
+.ipo-row .chev{color:var(--faint)}
+
+.badge{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:3px 9px;
+  border-radius:var(--radius-pill); text-transform:capitalize}
+.badge.running{background:var(--ok-bg); color:var(--ok-ink)}
+.badge.upcoming{background:var(--brand-soft); color:var(--brand)}
+.badge.closed{background:var(--no-bg); color:var(--no)}
+.badge.listed{background:var(--warn-bg); color:var(--warn)}
+.badge.unclassified{background:var(--surface-2); color:var(--faint)}
+
+/* IPO detail */
+.detail-head{display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:22px 0 4px}
+.detail-head h1{font-size:clamp(22px,3.5vw,30px); letter-spacing:-.03em; margin:0}
+.detail-sub{color:var(--muted); display:flex; gap:12px; flex-wrap:wrap; font-size:13.5px; margin-bottom:8px}
+.section{margin-top:14px}
+.section h2{font-size:15px; font-weight:750; margin:0 0 12px; display:flex; align-items:center; gap:9px}
+.kv-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px}
+.kv{display:flex; flex-direction:column; gap:2px}
+.kv .k{font-size:11.5px; color:var(--muted); font-weight:650; text-transform:uppercase; letter-spacing:.03em}
+.kv .v{font-size:15px; font-weight:700}
+.kv .v.none{color:var(--faint); font-weight:600}
+.metric-empty{display:flex; align-items:center; gap:9px; color:var(--faint); font-size:14px;
+  background:var(--surface-2); border:1px dashed var(--border-strong); border-radius:var(--radius-sm); padding:14px 16px}
+.provenance{font-size:12px; color:var(--faint); margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.provenance .src{color:var(--muted); font-weight:650}
+.disclaimer-box{font-size:12.5px; color:var(--warn); background:var(--warn-bg); border-radius:var(--radius-sm);
+  padding:11px 14px; margin-top:12px; line-height:1.5}
+.phase-note{font-size:12.5px; color:var(--faint); font-style:italic}
+@media (max-width:560px){ .ov-grid{grid-template-columns:repeat(2,1fr)} }

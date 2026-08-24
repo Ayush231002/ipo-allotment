@@ -1,0 +1,35 @@
+# Render blueprint for the AllotCheck intelligence platform.
+#
+# Cutover (do this in the Render dashboard when ready):
+#   1. Create/connect this blueprint, or set the web service's start command to
+#      the one below and add the Postgres database.
+#   2. Set ALLOTCHECK_ADMIN_TOKEN in the service Environment (a NEW strong value
+#      — the old committed token must be treated as burned).
+#   3. First deploy runs migrations automatically (app startup -> db.init_db()).
+#      Then POST /api/v1/admin/ingest-registrars with the x-admin-token header to
+#      seed IPO identity rows.
+#
+# Until cutover, the current dev-server start command (python local_server.py)
+# keeps the checker running exactly as before.
+
+services:
+  - type: web
+    name: allotcheck
+    runtime: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: ALLOTCHECK_ADMIN_TOKEN
+        sync: false            # set manually in the dashboard; never in the repo
+      - key: DATABASE_URL
+        fromDatabase:
+          name: allotcheck-db
+          property: connectionString
+
+databases:
+  - name: allotcheck-db
+    plan: free
+    region: singapore

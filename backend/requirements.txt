@@ -1,2 +1,10 @@
-# AllotCheck backend uses the Python standard library only.
-# Nothing to install — this keeps the Lambda package tiny and cold starts fast.
+# The privacy-first allotment CHECKER uses the Python standard library only and
+# is reused unchanged (core.py, registrars/, analytics.py) — see app/legacy.py.
+#
+# The Phase 1 intelligence layer (FastAPI read model + IPO pages) adds:
+fastapi==0.116.2
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+# Postgres driver — only imported when DATABASE_URL is set (SQLite is used for
+# local dev / CI, via the standard library, with no driver needed).
+psycopg[binary]==3.2.3
