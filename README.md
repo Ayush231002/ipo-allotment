@@ -66,6 +66,47 @@ Normalized result: `{found, name, applied, allotted, category, refund, account}`
 
 ---
 
+## Phase 1 — IPO Intelligence layer (FastAPI + read model)
+
+Beside the checker sits a **source-transparent IPO intelligence** layer. It is
+**additive** — the checker's code is reused verbatim through `app/legacy.py`, so
+the multi-PAN flow is unchanged.
+
+Run the full platform (checker + intelligence):
+
+```bash
+cd backend
+pip install -r requirements.txt          # fastapi, uvicorn, pydantic, psycopg
+uvicorn app.main:app --host 0.0.0.0 --port 8080
+```
+
+- **DB:** Postgres when `DATABASE_URL` is set (production/Render); otherwise a
+  local **SQLite** file (`backend/.data/allotcheck.db`) — zero services for dev.
+  Migrations + the source registry seed run automatically on startup.
+- **Pages:** `/` (checker, unchanged), `/dashboard` (IPO Intelligence),
+  `/ipo/<slug>` (detail), `/admin` (analytics).
+
+### `/api/v1` endpoints
+
+| Method & path | Returns |
+|---|---|
+| `GET /api/v1/health` | service + DB status, IPOs indexed |
+| `GET /api/v1/dashboard` | overview counts (running/upcoming/closed/listed) |
+| `GET /api/v1/ipos?status&board&q&limit&offset` | IPO directory |
+| `GET /api/v1/ipos/:slug` | IPO detail (overview + subscription/GMP/listing envelopes) |
+| `GET /api/v1/ipos/:slug/gmp` | GMP history |
+| `GET /api/v1/data-quality` | source registry + fetch logs + validation issues |
+| `POST /api/v1/admin/ingest-registrars` | seed IPO identity rows from registrars *(admin header)* |
+| `POST /api/v1/admin/ipo` | upsert verified IPO metadata *(admin header)* |
+
+**Honesty by construction:** every financial metric is returned in a
+`{available, value, source, captured_at, reason}` envelope. When no sourced data
+exists it is `available:false` with a reason — the UI shows *“Awaiting data”*,
+never a fabricated number. Data sources are **official + admin-entered** only.
+
+**Deploy:** `render.yaml` provisions the web service (uvicorn) + Postgres. Set a
+**new** `ALLOTCHECK_ADMIN_TOKEN` in the Render dashboard before cutover.
+
 ## Admin dashboard
 
 Open **`/admin`** and enter the admin token. It shows traffic (page views,
