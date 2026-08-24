@@ -22,6 +22,12 @@ services:
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/v1/health
     envVars:
+      # Pin Python 3.12 — 3.13/3.14 have no prebuilt pydantic-core wheels, which
+      # forces a Rust source build that fails on Render's read-only cargo cache.
+      # (A .python-version file at the repo root enforces this for non-blueprint
+      # services too.)
+      - key: PYTHON_VERSION
+        value: "3.12.8"
       - key: ALLOTCHECK_ADMIN_TOKEN
         sync: false            # set manually in the dashboard; never in the repo
       - key: DATABASE_URL
