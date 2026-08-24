@@ -25,8 +25,10 @@
   const REGLABEL = { kfintech: "KFintech", mufg: "MUFG / Intime" };
 
   async function fetchStats(token) {
-    const r = await fetch(`${API}/api/admin/stats?token=${encodeURIComponent(token)}&days=${days}`);
+    // Token goes in a header, never the URL (query strings leak into logs/history).
+    const r = await fetch(`${API}/api/admin/stats?days=${days}`, { headers: { "x-admin-token": token } });
     if (r.status === 401) throw new Error("unauthorized");
+    if (r.status === 503) throw new Error("disabled");
     if (!r.ok) throw new Error("HTTP " + r.status);
     return r.json();
   }
@@ -43,7 +45,9 @@
       $("login").hidden = true; $("dash").hidden = false; $("rangeSel").hidden = false; $("logout").hidden = false;
       render(data);
     } catch (e) {
-      if (String(e.message) === "unauthorized") showLogin("Wrong token. Try again.");
+      const m = String(e.message);
+      if (m === "unauthorized") showLogin("Wrong token. Try again.");
+      else if (m === "disabled") showLogin("Admin dashboard is disabled — no token is configured on the server.");
       else showLogin("Couldn't load stats. Is the server running?");
     }
   }

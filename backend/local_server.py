@@ -20,11 +20,21 @@ from urllib.parse import urlparse, parse_qs
 
 from core import handle_api
 
-PORT = 8080
+PORT = int(os.environ.get("PORT", "8080"))  # Render injects $PORT
 WEB_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "web"))
 _MIME = {".html": "text/html; charset=utf-8", ".css": "text/css",
          ".js": "application/javascript", ".svg": "image/svg+xml",
          ".png": "image/png", ".json": "application/json", ".ico": "image/x-icon"}
+
+# Content-Security-Policy for HTML documents. connect-src must allow KFintech's
+# CORS-open check API (called DIRECTLY from the browser) or the direct path
+# breaks; MUFG is proxied through us so 'self' covers it. Google Fonts + the
+# inline <style> block in admin.html require the style/font allowances below.
+CSP = ("default-src 'self'; base-uri 'self'; frame-ancestors 'none'; "
+       "object-src 'none'; form-action 'self'; img-src 'self' data:; "
+       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+       "font-src 'self' https://fonts.gstatic.com; script-src 'self'; "
+       "connect-src 'self' https://*.execute-api.ap-south-1.amazonaws.com")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -40,6 +50,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(b)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("X-Frame-Options", "DENY")
+        if "text/html" in ctype:
+            self.send_header("Content-Security-Policy", CSP)
         self.end_headers()
         self.wfile.write(b)
 

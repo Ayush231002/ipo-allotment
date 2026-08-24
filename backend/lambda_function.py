@@ -28,12 +28,17 @@ def handler(event, context):
             pass
 
     status, resp = handle_api(method, path, params, headers, body)
+    # The SPA is served from the SAME CloudFront domain as this API, so no CORS
+    # header is needed. The old wildcard `Access-Control-Allow-Origin: *` let any
+    # site drive the API — removed. For a split-origin deploy, echo a single
+    # allow-listed origin here instead of "*".
     return {
         "statusCode": status,
         "headers": {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
             "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
         },
         "body": json.dumps(resp),
     }
