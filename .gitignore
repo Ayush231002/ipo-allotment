@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+backend/.data/
+.DS_Store
+.env
+*.zip
+infra/.aws-sam/
+node_modules/

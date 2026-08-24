@@ -1,0 +1,2 @@
+# AllotCheck backend uses the Python standard library only.
+# Nothing to install — this keeps the Lambda package tiny and cold starts fast.

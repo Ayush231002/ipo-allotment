@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AllotCheck — IPO Allotment Status Checker</title>
+<meta name="description" content="Check your IPO allotment status across registrars — all your PANs in one click. KFintech, MUFG/Intime and more. A free tool by Elvora Global." />
+<meta name="author" content="Elvora Global Private Limited" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%235b57f6' d='M4 4h16v16H4z' rx='4'/%3E%3Cpath fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' d='M7 12.5l3.2 3.2L17 8.5'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;850&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="/" aria-label="Elvora Global home">
+      <img class="brand-logo" src="assets/elvora-logo.png" alt="Elvora Global logo" />
+      <span class="brand-word">Elvora<span class="g">Global</span></span>
+    </a>
+    <span class="spacer"></span>
+    <a class="header-link hide-sm" href="#how">How it works</a>
+    <a class="header-link" href="#contact">Contact</a>
+    <button id="themeBtn" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <span class="eyebrow"><span class="dot"></span> Live • Free • No login • No CAPTCHA</span>
+    <h1>Check IPO allotment for all your PANs,<br><span class="grad">on KFintech &amp; MUFG — in one click.</span></h1>
+    <p>Instantly see who got shares. Add your family's PANs once and check them together on KFintech and MUFG (Intime) — your PANs never leave your browser.</p>
+  </div>
+</section>
+
+<main>
+  <div class="container">
+
+    <!-- Step 1: registrar -->
+    <div class="card">
+      <div class="step-head"><span class="step-num">1</span><h2>Choose registrar</h2><span class="sub" id="regSub"></span></div>
+      <div class="segmented" id="registrars" role="tablist"><div class="skel" style="height:52px;width:100%"></div></div>
+    </div>
+
+    <!-- Step 2: IPO -->
+    <div class="card">
+      <div class="step-head"><span class="step-num">2</span><h2>Choose IPO</h2><span class="sub" id="ipoState"></span></div>
+      <div class="combo" id="ipoCombo" data-open="false">
+        <div class="combo-input-wrap">
+          <input id="ipoInput" class="input" type="text" role="combobox" aria-expanded="false" aria-controls="ipoPanel" aria-autocomplete="list" autocomplete="off" placeholder="Search IPO by name…" />
+          <span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></span>
+        </div>
+        <div class="combo-panel" id="ipoPanel" role="listbox" aria-label="IPO list" hidden></div>
+      </div>
+      <div id="ipoSelected" class="combo-selected" hidden></div>
+      <div class="toolbar" style="margin-top:11px">
+        <button id="reloadIpo" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>
+          Refresh list
+        </button>
+        <span class="hint" style="margin:0">The IPO list is fetched live — new IPOs appear automatically.</span>
+      </div>
+    </div>
+
+    <!-- Step 3: PANs -->
+    <div class="card">
+      <div class="step-head"><span class="step-num">3</span><h2>Your PANs</h2><span class="sub">Saved in this browser</span></div>
+      <div class="trust">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        Your PANs stay in this browser — they're never sent to or stored on any server.
+      </div>
+      <div id="people" class="people"></div>
+      <div id="peopleEmpty" class="empty">No PANs saved yet. Add your family's PANs below — they'll be remembered next time.</div>
+      <div class="add-row">
+        <input id="newName" class="input" placeholder="Name (optional) — e.g. Dad" autocomplete="off" />
+        <input id="newPan" class="input" placeholder="PAN — e.g. ABCDE1234F" autocomplete="off" maxlength="10" style="text-transform:uppercase" />
+        <button id="addPan" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Add
+        </button>
+      </div>
+      <div class="selrow">
+        <label class="check-inline"><input type="checkbox" id="selAll" checked /> Select all</label>
+        <span class="spacer" style="flex:1"></span>
+        <button id="exportBtn" class="btn btn-ghost" title="Save a backup file">Backup</button>
+        <button id="importBtn" class="btn btn-ghost" title="Load from a backup file">Restore</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden />
+      </div>
+      <details style="margin-top:12px">
+        <summary class="state-note" style="cursor:pointer">One-time PANs (not saved)</summary>
+        <textarea id="extraPans" class="input" style="margin-top:9px" placeholder="ABCDE1234F&#10;PQRSX6789L"></textarea>
+        <div class="hint">Paste PANs you don't want to save. They're checked together with the list above.</div>
+      </details>
+    </div>
+
+    <!-- Run -->
+    <div class="card run-card">
+      <button id="go" class="btn btn-primary big">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <span id="goLabel">Check allotment</span>
+      </button>
+      <div class="progress" id="progress"><div class="bar" id="progressBar"></div></div>
+      <div id="prog" class="state-note" style="text-align:center; margin-top:11px; min-height:18px"></div>
+    </div>
+
+    <!-- Results -->
+    <div class="card raised" id="resultCard" hidden>
+      <div class="step-head"><span class="step-num" style="background:var(--ok-bg);color:var(--ok)">✓</span><h2>Results</h2></div>
+      <div class="stats">
+        <div class="stat ok"><div class="n" id="cOk">0</div><div class="l">Allotted</div></div>
+        <div class="stat"><div class="n" id="cNo">0</div><div class="l">Not allotted</div></div>
+        <div class="stat err"><div class="n" id="cErr">0</div><div class="l">Errors</div></div>
+      </div>
+      <div class="result-meta" id="resultMeta"></div>
+      <div class="res-toolbar">
+        <label class="chip-toggle"><input type="checkbox" id="onlyAllotted" /> Show only allotted</label>
+      </div>
+      <div class="tbl-wrap">
+        <table id="tbl">
+          <thead><tr>
+            <th>#</th><th>PAN</th><th>Status</th><th>Name</th><th>Applied</th><th>Allotted</th><th>Details</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="result-actions">
+        <button id="csv" class="btn btn-ghost">Download CSV</button>
+        <button id="copy" class="btn btn-ghost">Copy table</button>
+      </div>
+    </div>
+
+    <div class="card" id="how">
+      <div class="step-head"><h2>How it works</h2></div>
+      <div class="how-grid">
+        <div class="how-item">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7L9 18l-5-5"/></svg></span>
+          <h3>Pick & paste once</h3>
+          <p>Choose the registrar and IPO, save your family's PANs — they're remembered next time.</p>
+        </div>
+        <div class="how-item">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></span>
+          <h3>Check in one click</h3>
+          <p>We query each registrar's own public allotment service and show every PAN's status together.</p>
+        </div>
+        <div class="how-item">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg></span>
+          <h3>Private by design</h3>
+          <p>No login, no CAPTCHA, and no PAN is ever stored on a server. Only check PANs you're entitled to.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer" id="contact">
+  <div class="container footer-grid">
+    <div class="f-brand">
+      <div class="f-logo">
+        <img src="assets/elvora-logo.png" alt="Elvora Global" />
+        <div class="f-name"><strong>Elvora Global</strong><span>Private Limited</span></div>
+      </div>
+      <p class="f-blurb">AllotCheck is a free tool by <b>Elvora Global</b> — an IT infrastructure, cloud &amp; DevOps company helping startups, SMBs and enterprises build, secure and operate reliable technology across AWS, Azure and GCP.</p>
+      <a class="f-social" href="https://www.linkedin.com/company/elvora-global-private-limited" target="_blank" rel="noopener" aria-label="Elvora Global on LinkedIn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4 0 4.75 2.64 4.75 6.07V21H16.6v-5.3c0-1.27-.02-2.9-1.77-2.9-1.77 0-2.04 1.38-2.04 2.8V21H9z"/></svg>
+        LinkedIn
+      </a>
+    </div>
+
+    <div class="f-col">
+      <h4>Contact</h4>
+      <a href="tel:+918828400661">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>
+        +91 88284 00661
+      </a>
+      <a href="mailto:sales@elvoraglobal.in">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+        sales@elvoraglobal.in
+      </a>
+      <a href="https://wa.me/918828400661?text=Hi%20Elvora%20Global%2C%20I%27d%20like%20to%20discuss%20a%20requirement." target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-2.8.8.8-2.7-.2-.3A8 8 0 1 1 12 20zm4.5-5.9c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.8.9-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.2-.4.2-.4.6-1.2a.4.4 0 0 0 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3A2.8 2.8 0 0 0 6.6 12a4.9 4.9 0 0 0 1 2.6 11 11 0 0 0 4.3 3.8c1.6.6 1.7.4 2 .4a2.5 2.5 0 0 0 1.6-1.1 2 2 0 0 0 .1-1.1c0-.1-.2-.2-.5-.3z"/></svg>
+        WhatsApp
+      </a>
+      <span class="f-addr">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Gurugram, Haryana, India
+      </span>
+    </div>
+
+    <div class="f-col f-cta">
+      <h4>Work with us</h4>
+      <p>Cloud, DevOps or PAN-India IT rollouts — one accountable partner. Book a free 30-minute consultation.</p>
+      <a class="btn btn-primary" href="https://www.elvoraglobal.in/contact" target="_blank" rel="noopener">Contact Elvora Global →</a>
+    </div>
+  </div>
+
+  <div class="container f-legal">
+    <p class="disclaimer">AllotCheck is an independent utility and is not affiliated with, endorsed by, or connected to any IPO registrar. Allotment data is fetched live from each registrar's own public status service. No PAN is stored on any server.</p>
+    <div class="f-legal-meta">
+      <span>CIN: U62099HR2026PTC142310</span>
+      <span>GSTIN: 06AAJCE5293P1ZX</span>
+      <span>© <span id="yr"></span> Elvora Global Private Limited</span>
+    </div>
+  </div>
+</footer>
+
+<div id="toasts"></div>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
