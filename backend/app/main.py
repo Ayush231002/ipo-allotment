@@ -18,12 +18,17 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config, db, legacy
 from .routers import meta, ipos, admin as admin_router
+from .services import scheduler
 
 
 @asynccontextmanager
 async def lifespan(app: "FastAPI"):
     db.init_db()          # run migrations + seed the source registry
-    yield
+    scheduler.start()     # internal classification job (no external calls)
+    try:
+        yield
+    finally:
+        scheduler.stop()
 
 
 app = FastAPI(title="AllotCheck Intelligence", version="1.0.0-phase1",

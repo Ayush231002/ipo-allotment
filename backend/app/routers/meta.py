@@ -2,7 +2,7 @@
 from __future__ import annotations
 from fastapi import APIRouter
 
-from .. import db, repo, legacy
+from .. import db, repo, legacy, sources
 
 router = APIRouter()
 
@@ -32,6 +32,7 @@ def data_quality():
         "sources": repo.sources(),
         "recent_fetches": repo.recent_fetch_logs(),
         "validation_issues": repo.validation_issue_counts(),
+        "fetchers": sources.status(),
         "note": "Financial metrics are shown only with a source and timestamp. "
                 "Unavailable data is labelled, never fabricated.",
     }
