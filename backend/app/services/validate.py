@@ -68,6 +68,21 @@ def validate_subscription(payload: dict) -> list[dict]:
     return issues
 
 
+def validate_gmp(payload: dict) -> list[dict]:
+    """GMP is unofficial market data; it may be a premium (+) or discount (-),
+    so negatives are allowed. Only type/sanity is enforced here."""
+    issues: list[dict] = []
+    gmp = payload.get("gmp")
+    if gmp is None or not isinstance(gmp, (int, float)):
+        issues.append(_issue("gmp", "error", "gmp (₹ premium) is required and must be a number"))
+    elif abs(gmp) > 100000:
+        issues.append(_issue("gmp", "error", "gmp is implausibly large"))
+    pct = payload.get("gmp_pct")
+    if pct is not None and (not isinstance(pct, (int, float)) or abs(pct) > 1000):
+        issues.append(_issue("gmp_pct", "error", "gmp_pct must be a sane number"))
+    return issues
+
+
 def has_errors(issues: list[dict]) -> bool:
     return any(i["severity"] == "error" for i in issues)
 

@@ -28,6 +28,8 @@
     closing: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     allot: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
     listing: '<path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/>',
+    gmp: '<path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 5-6"/>',
+    peak: '<path d="M3 20h18"/><path d="M7 20l4-11 3 6 3-8 4 13"/>',
   };
   function ovCard(icon, n, label, sub, awaiting) {
     const val = awaiting ? "Awaiting data" : nfmt(n);
@@ -55,6 +57,19 @@
       ovCard("closed", c.closed, "Closed", "awaiting listing", noMarket && !c.closed) +
       ovCard("listed", c.listed, "Recently listed", "", noMarket && !c.listed) +
       ovCard("indexed", c.indexed_total, "IPOs indexed", "identity records", false);
+
+    // GMP summary (unofficial — clearly labelled)
+    const g = d.gmp || {};
+    let gmpCards = ovCard("gmp", g.active_count, "Active GMP", "unofficial", !g.active_count);
+    if (g.highest) {
+      gmpCards += `<div class="ov-card"><div class="ov-top"><span class="ov-l">Highest GMP</span>
+        <span class="ov-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON.peak}</svg></span></div>
+        <div class="ov-n">₹${nfmt(g.highest.gmp)}</div>
+        <div class="ov-sub"><a href="/ipo/${encodeURIComponent(g.highest.slug)}">${esc(g.highest.name)}</a></div></div>`;
+    } else {
+      gmpCards += ovCard("peak", 0, "Highest GMP", "unofficial", true);
+    }
+    $("ovGrid").insertAdjacentHTML("beforeend", gmpCards);
   }
 
   async function loadDataQuality() {
