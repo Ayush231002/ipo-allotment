@@ -49,6 +49,16 @@ def count_ipos(status: str = "") -> int:
     return int(r[0]["n"]) if r else 0
 
 
+_DATE_FIELDS = {"close_date", "listing_date", "allotment_date", "open_date"}
+
+
+def count_on_date(field: str, day: str) -> int:
+    if field not in _DATE_FIELDS:      # guard against SQL identifier injection
+        return 0
+    r = db.query(f"SELECT COUNT(*) AS n FROM ipo WHERE {field}=?", (day,))
+    return int(r[0]["n"]) if r else 0
+
+
 def get_ipo(slug: str) -> dict | None:
     r = db.query("SELECT * FROM ipo WHERE slug=?", (slug,))
     return r[0] if r else None
