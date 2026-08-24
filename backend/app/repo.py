@@ -68,21 +68,63 @@ def latest_gmp(ipo_id: int) -> dict | None:
     r = db.query(
         "SELECT g.gmp,g.gmp_pct,g.note,g.captured_at,s.name AS source,s.type AS source_type "
         "FROM ipo_gmp_snapshots g LEFT JOIN data_sources s ON s.id=g.source_id "
-        "WHERE g.ipo_id=? ORDER BY g.captured_at DESC LIMIT 1", (ipo_id,))
+        "WHERE g.ipo_id=? ORDER BY g.captured_at DESC, g.id DESC LIMIT 1", (ipo_id,))
     return r[0] if r else None
 
 
-def gmp_history(ipo_id: int, limit: int = 60) -> list[dict]:
+def gmp_history(ipo_id: int, limit: int = 120) -> list[dict]:
+    # id is the tiebreaker so same-second snapshots keep insertion order.
     return db.query(
         "SELECT gmp,gmp_pct,note,captured_at FROM ipo_gmp_snapshots "
-        "WHERE ipo_id=? ORDER BY captured_at ASC LIMIT ?", (ipo_id, limit))
+        "WHERE ipo_id=? ORDER BY captured_at ASC, id ASC LIMIT ?", (ipo_id, limit))
+
+
+def gmp_analytics(ipo_id: int) -> dict:
+    """Trend stats computed from the real snapshot history — no fabrication.
+    Returns available:false when there is nothing to analyse."""
+    hist = gmp_history(ipo_id)
+    vals = [h["gmp"] for h in hist if isinstance(h["gmp"], (int, float))]
+    if not vals:
+        return {"available": False, "history": []}
+    n = len(vals)
+    mean = sum(vals) / n
+    variance = sum((v - mean) ** 2 for v in vals) / n
+    current, previous = vals[-1], (vals[-2] if n >= 2 else None)
+    last = hist[-1]
+    return {
+        "available": True,
+        "count": n,
+        "current": current,
+        "current_pct": last.get("gmp_pct"),
+        "previous": previous,
+        "change": (current - previous) if previous is not None else None,
+        "high": max(vals),
+        "low": min(vals),
+        "average": round(mean, 2),
+        "volatility": round(variance ** 0.5, 2),   # population std dev
+        "first_at": hist[0]["captured_at"],
+        "last_at": last["captured_at"],
+        "history": hist,
+    }
+
+
+def gmp_dashboard_summary() -> dict:
+    """Active-GMP count + the highest current GMP across indexed IPOs."""
+    active = db.query("SELECT COUNT(DISTINCT ipo_id) AS n FROM ipo_gmp_snapshots")
+    n = int(active[0]["n"]) if active else 0
+    top = db.query(
+        "SELECT i.slug, i.name, g.gmp, g.gmp_pct FROM ipo i "
+        "JOIN ipo_gmp_snapshots g ON g.ipo_id = i.id "
+        "WHERE g.captured_at = (SELECT MAX(captured_at) FROM ipo_gmp_snapshots g2 "
+        "WHERE g2.ipo_id = i.id) ORDER BY g.gmp DESC LIMIT 1")
+    return {"active_count": n, "highest": (top[0] if top else None)}
 
 
 def latest_subscription(ipo_id: int) -> dict | None:
     r = db.query(
         "SELECT sub.*, s.name AS source, s.type AS source_type "
         "FROM ipo_subscription_snapshots sub LEFT JOIN data_sources s ON s.id=sub.source_id "
-        "WHERE sub.ipo_id=? ORDER BY sub.captured_at DESC LIMIT 1", (ipo_id,))
+        "WHERE sub.ipo_id=? ORDER BY sub.captured_at DESC, sub.id DESC LIMIT 1", (ipo_id,))
     return r[0] if r else None
 
 

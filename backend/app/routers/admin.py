@@ -156,6 +156,36 @@ def add_subscription(slug: str, payload: SubscriptionIn,
     return {"ok": True, "slug": slug}
 
 
+class GmpIn(BaseModel):
+    gmp: float | None = None            # ₹ premium (may be negative = discount)
+    gmp_pct: float | None = None
+    note: str | None = ""
+    source: str | None = "manual"       # GMP is unofficial; usually admin-entered
+
+
+@router.post("/admin/ipo/{slug}/gmp")
+def add_gmp(slug: str, payload: GmpIn,
+            x_admin_token: str | None = Header(default=None)):
+    """Append a validated GMP snapshot. GMP is unofficial secondary-market data
+    and is always labelled as such in the UI."""
+    _require_admin(x_admin_token)
+    ipo = repo.get_ipo(slug)
+    if not ipo:
+        raise HTTPException(status_code=404, detail="IPO not found")
+    data = payload.model_dump()
+    issues = validate.validate_gmp(data)
+    if validate.has_errors(issues):
+        raise HTTPException(status_code=422, detail={"error": "validation failed",
+                                                     "issues": issues})
+    src = db.source_id(payload.source or "manual") or db.source_id("manual")
+    db.execute(
+        "INSERT INTO ipo_gmp_snapshots (ipo_id, source_id, gmp, gmp_pct, note) "
+        "VALUES (?,?,?,?,?)",
+        (ipo["id"], src, data["gmp"], data["gmp_pct"], (data["note"] or "")[:200]))
+    repo.audit("admin", "gmp-add", slug)
+    return {"ok": True, "slug": slug}
+
+
 @router.post("/admin/reclassify")
 def reclassify(x_admin_token: str | None = Header(default=None)):
     """Run the classification job on demand (also runs on a schedule)."""

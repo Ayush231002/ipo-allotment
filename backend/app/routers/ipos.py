@@ -43,6 +43,8 @@ def dashboard():
         "as_of": today,
         "counts": counts,
         "today": today_events,
+        "gmp": repo.gmp_dashboard_summary(),
+        "gmp_disclaimer": DISCLAIMER_GMP,
         "market_data_available": counts["running"] + counts["upcoming"] + counts["closed"] > 0,
         "note": "Status is derived from verified dates. Metrics without a source "
                 "are shown as 'Awaiting data', never fabricated.",
@@ -116,6 +118,8 @@ def ipo_gmp(slug: str):
     ipo = repo.get_ipo(slug)
     if not ipo:
         raise HTTPException(status_code=404, detail="IPO not found")
-    history = repo.gmp_history(ipo["id"])
-    return {"slug": slug, "history": history, "count": len(history),
+    analytics = repo.gmp_analytics(ipo["id"])
+    return {"slug": slug, "analytics": analytics,
+            "history": analytics.get("history", []),
+            "count": analytics.get("count", 0),
             "disclaimer": DISCLAIMER_GMP}

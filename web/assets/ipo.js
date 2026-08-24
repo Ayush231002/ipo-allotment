@@ -92,10 +92,7 @@
 
       <div class="card section">
         <h2>Grey Market Premium (GMP)</h2>
-        ${gmp.available ? `<div class="kv-grid">
-          ${kv("Current GMP", gmp.value.gmp, "₹")}
-          ${kv("GMP %", gmp.value.gmp_pct, "%")}
-        </div>${provenance(gmp)}` : emptyMetric(gmp.reason)}
+        <div id="gmpBody"><div class="skel" style="height:56px"></div></div>
         <div class="disclaimer-box">${esc(d.gmp_disclaimer)}</div>
       </div>
 
@@ -127,6 +124,51 @@
       <p class="disclaimer" style="margin-top:18px">AllotCheck is independent and not affiliated with any registrar, exchange or issuer. Data is shown with its source and timestamp; unavailable data is labelled, not fabricated. Nothing here is investment advice.</p>`;
   }
 
+  /* inline-SVG sparkline (self-contained, no libraries) */
+  function sparkline(vals) {
+    if (vals.length < 2) return "";
+    const W = 320, H = 60, pad = 4;
+    const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1;
+    const x = i => pad + i * (W - 2 * pad) / (vals.length - 1);
+    const y = v => H - pad - (v - min) / span * (H - 2 * pad);
+    const pts = vals.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+    const area = `${pad},${H - pad} ${pts} ${(W - pad)},${H - pad}`;
+    const up = vals[vals.length - 1] >= vals[0];
+    const col = up ? "var(--ok)" : "var(--danger)";
+    return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="GMP trend">
+      <polygon points="${area}" fill="${col}" opacity="0.10"></polygon>
+      <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>
+    </svg>`;
+  }
+
+  const gstat = (k, v, suffix, cls) => `<div class="gstat"><span class="gk">${esc(k)}</span><span class="gv ${cls || ""}">${(v === null || v === undefined) ? "—" : esc(fmt(v)) + (suffix || "")}</span></div>`;
+
+  async function loadGmp() {
+    const box = $("gmpBody"); if (!box) return;
+    let d;
+    try { d = await fetch(`${API}/api/v1/ipos/${encodeURIComponent(slug)}/gmp`).then(r => r.json()); }
+    catch (e) { box.innerHTML = emptyMetric("GMP data is temporarily unavailable."); return; }
+    const a = d.analytics || {};
+    if (!a.available) { box.innerHTML = emptyMetric("No GMP data from configured sources yet."); return; }
+    const vals = (a.history || []).map(h => h.gmp);
+    const changeCls = a.change == null ? "" : (a.change > 0 ? "up" : a.change < 0 ? "down" : "");
+    const changeStr = a.change == null ? "—" : (a.change > 0 ? "+" : "") + fmt(a.change) + " ₹";
+    box.innerHTML =
+      `<div class="gmp-top">
+         <div class="gmp-cur"><div class="gmp-n">₹${esc(fmt(a.current))}</div>
+           <div class="gmp-l">Current GMP${a.current_pct != null ? ` · ${esc(fmt(a.current_pct))}%` : ""}</div></div>
+         ${sparkline(vals)}
+       </div>
+       <div class="gstats">
+         ${gstat("Change", null, "", changeCls).replace("—", changeStr)}
+         ${gstat("High", a.high, " ₹")}
+         ${gstat("Low", a.low, " ₹")}
+         ${gstat("Volatility", a.volatility, "")}
+         ${gstat("Data points", a.count, "")}
+       </div>
+       <div class="provenance"><span class="src">${a.count} snapshot${a.count > 1 ? "s" : ""}</span> · ${esc(a.first_at)} → ${esc(a.last_at)}</div>`;
+  }
+
   async function load() {
     if (!slug) { $("content").innerHTML = `<div class="card"><p class="state-note">No IPO specified.</p></div>`; return; }
     let r;
@@ -139,6 +181,7 @@
     }
     if (!r.ok) { $("content").innerHTML = `<div class="card"><p class="state-note">Something went wrong (${r.status}).</p></div>`; return; }
     render(await r.json());
+    loadGmp();
   }
   load();
 })();
