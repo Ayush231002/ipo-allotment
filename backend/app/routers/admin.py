@@ -10,6 +10,7 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
 from .. import config, db, repo
+from ..services import validate, classify, scheduler
 
 router = APIRouter()
 
@@ -73,13 +74,23 @@ class IpoUpsert(BaseModel):
 
 @router.post("/admin/ipo")
 def upsert_ipo(payload: IpoUpsert, x_admin_token: str | None = Header(default=None)):
-    """Create/update verified IPO metadata (the admin-entered data path)."""
+    """Create/update verified IPO metadata (the admin-entered data path).
+
+    Validated before persistence: `error`-level issues block the write (422);
+    `warn`-level issues are recorded and returned. Status is then derived from
+    the dates automatically.
+    """
     _require_admin(x_admin_token)
     slug = repo.slugify(payload.name)
     existing = repo.get_ipo(slug)
     fields = payload.model_dump(exclude_none=True)
-    src = db.source_id("manual")
 
+    issues = validate.validate_ipo(fields)
+    if validate.has_errors(issues):
+        raise HTTPException(status_code=422, detail={"error": "validation failed",
+                                                     "issues": issues})
+
+    src = db.source_id("manual")
     if existing:
         sets, params = [], []
         for k, v in fields.items():
@@ -98,5 +109,55 @@ def upsert_ipo(payload: IpoUpsert, x_admin_token: str | None = Header(default=No
         db.execute(f"INSERT INTO ipo ({','.join(cols)}) VALUES ({ph})", tuple(vals))
         action = "create"
 
+    # derive lifecycle status from the (now-persisted) dates + record warnings
+    row = repo.get_ipo(slug)
+    new_status = classify.classify_row(row)
+    if new_status != "unclassified":
+        db.execute("UPDATE ipo SET status=? WHERE slug=?", (new_status, slug))
+    validate.record(row["id"], issues)
+
     repo.audit("admin", f"ipo-{action}", slug)
-    return {"ok": True, "slug": slug, "action": action}
+    return {"ok": True, "slug": slug, "action": action, "status": new_status,
+            "warnings": [i for i in issues if i["severity"] == "warn"]}
+
+
+class SubscriptionIn(BaseModel):
+    overall_x: float | None = None
+    qib_x: float | None = None
+    nii_x: float | None = None
+    retail_x: float | None = None
+    employee_x: float | None = None
+    shareholder_x: float | None = None
+    source: str | None = "manual"   # data_sources.key (official or manual)
+
+
+@router.post("/admin/ipo/{slug}/subscription")
+def add_subscription(slug: str, payload: SubscriptionIn,
+                     x_admin_token: str | None = Header(default=None)):
+    """Append a validated subscription snapshot (admin-entered/official)."""
+    _require_admin(x_admin_token)
+    ipo = repo.get_ipo(slug)
+    if not ipo:
+        raise HTTPException(status_code=404, detail="IPO not found")
+
+    data = payload.model_dump()
+    issues = validate.validate_subscription(data)
+    if validate.has_errors(issues):
+        raise HTTPException(status_code=422, detail={"error": "validation failed",
+                                                     "issues": issues})
+    src = db.source_id(payload.source or "manual") or db.source_id("manual")
+    db.execute(
+        "INSERT INTO ipo_subscription_snapshots "
+        "(ipo_id, source_id, overall_x, qib_x, nii_x, retail_x, employee_x, shareholder_x) "
+        "VALUES (?,?,?,?,?,?,?,?)",
+        (ipo["id"], src, data["overall_x"], data["qib_x"], data["nii_x"],
+         data["retail_x"], data["employee_x"], data["shareholder_x"]))
+    repo.audit("admin", "subscription-add", slug)
+    return {"ok": True, "slug": slug}
+
+
+@router.post("/admin/reclassify")
+def reclassify(x_admin_token: str | None = Header(default=None)):
+    """Run the classification job on demand (also runs on a schedule)."""
+    _require_admin(x_admin_token)
+    return scheduler.run_once()

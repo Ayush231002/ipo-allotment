@@ -26,6 +26,7 @@ def _metric(available: bool, value=None, source: str = "", captured_at: str = ""
 @router.get("/dashboard")
 def dashboard():
     """Overview counters — computed from the read model, real zeros when empty."""
+    today = date.today().isoformat()
     counts = {
         "running": repo.count_ipos("running"),
         "upcoming": repo.count_ipos("upcoming"),
@@ -33,13 +34,18 @@ def dashboard():
         "listed": repo.count_ipos("listed"),
         "indexed_total": repo.count_ipos(),
     }
+    today_events = {
+        "closing_today": repo.count_on_date("close_date", today),
+        "listing_today": repo.count_on_date("listing_date", today),
+        "allotment_today": repo.count_on_date("allotment_date", today),
+    }
     return {
-        "as_of": date.today().isoformat(),
+        "as_of": today,
         "counts": counts,
-        "market_data_available": counts["running"] + counts["upcoming"] > 0,
-        "note": "Market metadata (dates, subscription, GMP, listing) is populated "
-                "by the data pipeline in Phase 2. Identity records may already be "
-                "present from registrar lists.",
+        "today": today_events,
+        "market_data_available": counts["running"] + counts["upcoming"] + counts["closed"] > 0,
+        "note": "Status is derived from verified dates. Metrics without a source "
+                "are shown as 'Awaiting data', never fabricated.",
     }
 
 

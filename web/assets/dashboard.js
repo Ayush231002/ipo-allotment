@@ -25,6 +25,9 @@
     closed: '<path d="M20 7L9 18l-5-5"/>',
     listed: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
     indexed: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/>',
+    closing: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    allot: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    listing: '<path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/>',
   };
   function ovCard(icon, n, label, sub, awaiting) {
     const val = awaiting ? "Awaiting data" : nfmt(n);
@@ -42,10 +45,14 @@
     // Market classification (running/upcoming/etc.) lands in Phase 2. Until any
     // dated metadata exists, show those as "Awaiting data" rather than a bare 0.
     const noMarket = !d.market_data_available;
+    const t = d.today || {};
     $("ovGrid").innerHTML =
       ovCard("running", c.running, "Running IPOs", d.as_of ? "as of " + d.as_of : "", noMarket && !c.running) +
       ovCard("upcoming", c.upcoming, "Upcoming", "", noMarket && !c.upcoming) +
-      ovCard("closed", c.closed, "Closed", "awaiting allotment", noMarket && !c.closed) +
+      ovCard("closing", t.closing_today, "Closing today", "", noMarket && !t.closing_today) +
+      ovCard("allot", t.allotment_today, "Allotment today", "", noMarket && !t.allotment_today) +
+      ovCard("listing", t.listing_today, "Listing today", "", noMarket && !t.listing_today) +
+      ovCard("closed", c.closed, "Closed", "awaiting listing", noMarket && !c.closed) +
       ovCard("listed", c.listed, "Recently listed", "", noMarket && !c.listed) +
       ovCard("indexed", c.indexed_total, "IPOs indexed", "identity records", false);
   }
