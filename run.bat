@@ -3,12 +3,19 @@ title AllotCheck (local)
 cd /d "%~dp0backend"
 
 REM ============================================================
-REM  ADMIN PASSWORD (token) for the /admin dashboard.
-REM  Change "changeme" below to your own secret and save.
+REM  ADMIN TOKEN for the /admin dashboard.
+REM  NEVER hard-code a secret in this file (it is committed to git).
+REM  Set it in your shell BEFORE running:
+REM     set ALLOTCHECK_ADMIN_TOKEN=your-strong-secret      (this window only)
+REM     setx ALLOTCHECK_ADMIN_TOKEN "your-strong-secret"   (persists; reopen shell)
+REM  On Render: Dashboard -> your service -> Environment -> add the variable.
 REM  Use the SAME value on the /admin login page.
 REM ============================================================
-set ALLOTCHECK_ADMIN_TOKEN=Vijay@2026Secret
-REM ============================================================
+if "%ALLOTCHECK_ADMIN_TOKEN%"=="" (
+  echo [warn] ALLOTCHECK_ADMIN_TOKEN is not set - the /admin dashboard is disabled.
+  echo        Set it first, e.g.:  set ALLOTCHECK_ADMIN_TOKEN=your-strong-secret
+  echo.
+)
 
 echo Starting AllotCheck...
 echo   App    :  http://localhost:8080/
